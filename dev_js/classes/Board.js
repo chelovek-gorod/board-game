@@ -1,156 +1,190 @@
 import VIEW from "../render";
 import { SPRITES } from "../assets";
-import Layer from "./Layer";
-
-
-const ceils = 13; // 13 ячеек на одной грани поля
-const rate = ceils * 2; // 13 ячеек (умножаем на 2 чтобы коэффициент был четным)
-const maxCeilSize = 120; // максимальный размер клетки в пикселях
+import constants from "../constants";
 
 class Board {
     constructor() {
         this.image = SPRITES.board;
+        this.ceilSize = constants.ceilSize;
+        this.imageSize = 13 * this.ceilSize;
+        this.imageOffset = constants.boardOffset + constants.ceilSize;
 
-        this.layer = new Layer('board', 0, [this]);
+        this.reserveTop = [
+            // isEmpty: true - так как в начале нет фишек, они появятся при старте
+            {isEmpty: true, target: 6, x: 0, y: 0, rateX: 5.5, rateY: 0},
+            {isEmpty: true, target: 6, x: 0, y: 0, rateX: 6.5, rateY: 0},
+            {isEmpty: true, target: 6, x: 0, y: 0, rateX: 7.5, rateY: 0},
+            {isEmpty: true, target: 6, x: 0, y: 0, rateX: 8.5, rateY: 0},
+        ];
+        this.reserveRight = [
+            // isEmpty: true - так как в начале нет фишек, они появятся при старте
+            {isEmpty: true, target: 18, x: 0, y: 0, rateX: 14, rateY: 5.5},
+            {isEmpty: true, target: 18, x: 0, y: 0, rateX: 14, rateY: 6.5},
+            {isEmpty: true, target: 18, x: 0, y: 0, rateX: 14, rateY: 7.5},
+            {isEmpty: true, target: 18, x: 0, y: 0, rateX: 14, rateY: 8.5},
+        ];
+        this.reserveBottom = [
+            // isEmpty: true - так как в начале нет фишек, они появятся при старте
+            {isEmpty: true, target: 30, x: 0, y: 0, rateX: 5.5, rateY: 14},
+            {isEmpty: true, target: 30, x: 0, y: 0, rateX: 6.5, rateY: 14},
+            {isEmpty: true, target: 30, x: 0, y: 0, rateX: 7.5, rateY: 14},
+            {isEmpty: true, target: 30, x: 0, y: 0, rateX: 8.5, rateY: 14},
+        ];
+        this.reserveLeft = [
+            // isEmpty: true - так как в начале нет фишек, они появятся при старте
+            {isEmpty: true, target: 42, x: 0, y: 0, rateX: 0, rateY: 5.5},
+            {isEmpty: true, target: 42, x: 0, y: 0, rateX: 0, rateY: 6.5},
+            {isEmpty: true, target: 42, x: 0, y: 0, rateX: 0, rateY: 7.5},
+            {isEmpty: true, target: 42, x: 0, y: 0, rateX: 0, rateY: 8.5},
+        ];
+        this.reserves = [this.reserveTop, this.reserveRight, this.reserveBottom, this.reserveLeft];
 
         this.toiletTop = [
-            {type: 'toilet', x: 0, y: 0, rateX: 9, rateY: 1},
-            {type: 'toilet', x: 0, y: 0, rateX: 10, rateY: 1},
-            {type: 'toilet', x: 0, y: 0, rateX: 11, rateY: 1},
+            {token: null, move: 1, x: 0, y: 0, rateX: 10, rateY: 2},
+            {token: null, move: 3, x: 0, y: 0, rateX: 11, rateY: 2},
+            {token: null, move: 6, target: 11, x: 0, y: 0, rateX: 12, rateY: 2},
         ];
         this.toiletRight = [
-            {type: 'toilet', x: 0, y: 0, rateX: 11, rateY: 9},
-            {type: 'toilet', x: 0, y: 0, rateX: 11, rateY: 10},
-            {type: 'toilet', x: 0, y: 0, rateX: 11, rateY: 11},
+            {token: null, move: 1, x: 0, y: 0, rateX: 12, rateY: 10},
+            {token: null, move: 3, x: 0, y: 0, rateX: 12, rateY: 11},
+            {token: null, move: 6, target: 23, x: 0, y: 0, rateX: 12, rateY: 12},
         ];
         this.toiletBottom = [
-            {type: 'toilet', x: 0, y: 0, rateX: 3, rateY: 11},
-            {type: 'toilet', x: 0, y: 0, rateX: 2, rateY: 11},
-            {type: 'toilet', x: 0, y: 0, rateX: 1, rateY: 11},
+            {token: null, move: 1, x: 0, y: 0, rateX: 4, rateY: 12},
+            {token: null, move: 3, x: 0, y: 0, rateX: 3, rateY: 12},
+            {token: null, move: 6, target: 35, x: 0, y: 0, rateX: 2, rateY: 12},
         ];
         this.toiletLeft = [
-            {type: 'toilet', x: 0, y: 0, rateX: 1, rateY: 3},
-            {type: 'toilet', x: 0, y: 0, rateX: 1, rateY: 2},
-            {type: 'toilet', x: 0, y: 0, rateX: 1, rateY: 1},
+            {token: null, move: 1, x: 0, y: 0, rateX: 2, rateY: 4},
+            {token: null, move: 3, x: 0, y: 0, rateX: 2, rateY: 3},
+            {token: null, move: 6, target: 47, x: 0, y: 0, rateX: 2, rateY: 2},
         ];
+        this.toilets = [this.toiletTop, this.toiletRight, this.toiletBottom, this.toiletLeft];
 
         this.homeTop = [
-            {type: 'home', x: 0, y: 0, rateX: 6, rateY: 1},
-            {type: 'home', x: 0, y: 0, rateX: 6, rateY: 2},
-            {type: 'home', x: 0, y: 0, rateX: 6, rateY: 3},
-            {type: 'home', x: 0, y: 0, rateX: 6, rateY: 4},
+            {isEmpty: true, x: 0, y: 0, rateX: 7, rateY: 2},
+            {isEmpty: true, x: 0, y: 0, rateX: 7, rateY: 3},
+            {isEmpty: true, x: 0, y: 0, rateX: 7, rateY: 4},
+            {isEmpty: true, x: 0, y: 0, rateX: 7, rateY: 5},
         ];
         this.homeRight = [
-            {type: 'home', x: 0, y: 0, rateX: 11, rateY: 6},
-            {type: 'home', x: 0, y: 0, rateX: 10, rateY: 6},
-            {type: 'home', x: 0, y: 0, rateX: 9, rateY: 6},
-            {type: 'home', x: 0, y: 0, rateX: 8, rateY: 6},
+            {isEmpty: true, x: 0, y: 0, rateX: 12, rateY: 7},
+            {isEmpty: true, x: 0, y: 0, rateX: 11, rateY: 7},
+            {isEmpty: true, x: 0, y: 0, rateX: 10, rateY: 7},
+            {isEmpty: true, x: 0, y: 0, rateX: 9, rateY: 7},
         ];
         this.homeBottom = [
-            {type: 'home', x: 0, y: 0, rateX: 6, rateY: 11},
-            {type: 'home', x: 0, y: 0, rateX: 6, rateY: 10},
-            {type: 'home', x: 0, y: 0, rateX: 6, rateY: 9},
-            {type: 'home', x: 0, y: 0, rateX: 6, rateY: 8},
+            {isEmpty: true, x: 0, y: 0, rateX: 7, rateY: 12},
+            {isEmpty: true, x: 0, y: 0, rateX: 7, rateY: 11},
+            {isEmpty: true, x: 0, y: 0, rateX: 7, rateY: 10},
+            {isEmpty: true, x: 0, y: 0, rateX: 7, rateY: 9},
         ];
         this.homeLeft = [
-            {type: 'home', x: 0, y: 0, rateX: 1, rateY: 6},
-            {type: 'home', x: 0, y: 0, rateX: 2, rateY: 6},
-            {type: 'home', x: 0, y: 0, rateX: 3, rateY: 6},
-            {type: 'home', x: 0, y: 0, rateX: 4, rateY: 6},
+            {isEmpty: true, x: 0, y: 0, rateX: 2, rateY: 7},
+            {isEmpty: true, x: 0, y: 0, rateX: 3, rateY: 7},
+            {isEmpty: true, x: 0, y: 0, rateX: 4, rateY: 7},
+            {isEmpty: true, x: 0, y: 0, rateX: 5, rateY: 7},
         ];
+        this.homes = [this.homeTop, this.homeRight, this.homeBottom, this.homeLeft];
+
+        this.ports = [
+            // граньСторона (topLeft - верхняя грань поля, слева)
+            {type: 'topLeft', target: 44, x: 0, y: 0, rateX: 5, rateY: 5},
+            {type: 'topRight', target: 16, x: 0, y: 0, rateX: 9, rateY: 5},
+            {type: 'rightTop', target: 8, x: 0, y: 0, rateX: 9, rateY: 5},
+            {type: 'rightBottom', target: 28, x: 0, y: 0, rateX: 9, rateY: 9},
+            {type: 'bottomRight', target: 20, x: 0, y: 0, rateX: 9, rateY: 9},
+            {type: 'bottomLeft', target: 40, x: 0, y: 0, rateX: 5, rateY: 9},
+            {type: 'leftBottom', target: 32, x: 0, y: 0, rateX: 5, rateY: 9},
+            {type: 'leftTop', target: 4, x: 0, y: 0, rateX: 5, rateY: 5},
+        ]
 
         this.ceils = [
             // top line
-            {type: 'corner', x: 0, y: 0, rateX: 0, rateY: 0},
-            {type: 'empty', x: 0, y: 0, rateX: 1, rateY: 0},
-            {type: 'empty', x: 0, y: 0, rateX: 2, rateY: 0},
-            {type: 'empty', x: 0, y: 0, rateX: 3, rateY: 0},
-            {type: 'port', target: 44, x: 0, y: 0, rateX: 4, rateY: 0},
-            {type: 'empty', x: 0, y: 0, rateX: 5, rateY: 0},
-            {type: 'home', target: 'HomeTop', x: 0, y: 0, rateX: 6, rateY: 0},
-            {type: 'empty', x: 0, y: 0, rateX: 7, rateY: 0},
-            {type: 'port', target: 16, x: 0, y: 0, rateX: 8, rateY: 0},
-            {type: 'toilet', target: 'toiletTop', x: 0, y: 0, rateX: 9, rateY: 0},
-            {type: 'empty', x: 0, y: 0, rateX: 10, rateY: 0},
-            {type: 'exit', target: 'toiletTop', x: 0, y: 0, rateX: 11, rateY: 0},
+            {type: 'corner', x: 0, y: 0, rateX: 1, rateY: 1},
+            {type: 'empty', x: 0, y: 0, rateX: 2, rateY: 1},
+            {type: 'empty', x: 0, y: 0, rateX: 3, rateY: 1},
+            {type: 'empty', x: 0, y: 0, rateX: 4, rateY: 1},
+            {type: 'port', target: 0, x: 0, y: 0, rateX: 5, rateY: 1},
+            {type: 'empty', x: 0, y: 0, rateX: 6, rateY: 1},
+            {type: 'home', target: 0, x: 0, y: 0, rateX: 7, rateY: 1},
+            {type: 'empty', x: 0, y: 0, rateX: 8, rateY: 1},
+            {type: 'port', target: 1, x: 0, y: 0, rateX: 9, rateY: 1},
+            {type: 'toilet', target: 0, x: 0, y: 0, rateX: 10, rateY: 1},
+            {type: 'empty', x: 0, y: 0, rateX: 11, rateY: 1},
+            {type: 'exit', x: 0, y: 0, rateX: 12, rateY: 1},
             // right line
-            {type: 'corner', x: 0, y: 0, rateX: 12, rateY: 0},
-            {type: 'empty', x: 0, y: 0, rateX: 12, rateY: 1},
-            {type: 'empty', x: 0, y: 0, rateX: 12, rateY: 2},
-            {type: 'empty', x: 0, y: 0, rateX: 12, rateY: 3},
-            {type: 'port', target: 8, x: 0, y: 0, rateX: 12, rateY: 4},
-            {type: 'empty', x: 0, y: 0, rateX: 12, rateY: 5},
-            {type: 'home', target: 'HomeRight', x: 0, y: 0, rateX: 12, rateY: 6},
-            {type: 'empty', x: 0, y: 0, rateX: 12, rateY: 7},
-            {type: 'port', target: 28, x: 0, y: 0, rateX: 12, rateY: 8},
-            {type: 'toilet', target: 'toiletRight', x: 0, y: 0, rateX: 12, rateY: 9},
-            {type: 'empty', x: 0, y: 0, rateX: 12, rateY: 10},
-            {type: 'exit', target: 'toiletRight', x: 0, y: 0, rateX: 12, rateY: 11},
+            {type: 'corner', x: 0, y: 0, rateX: 13, rateY: 1},
+            {type: 'empty', x: 0, y: 0, rateX: 13, rateY: 2},
+            {type: 'empty', x: 0, y: 0, rateX: 13, rateY: 3},
+            {type: 'empty', x: 0, y: 0, rateX: 13, rateY: 4},
+            {type: 'port', target: 2, x: 0, y: 0, rateX: 13, rateY: 5},
+            {type: 'empty', x: 0, y: 0, rateX: 13, rateY: 6},
+            {type: 'home', target: 1, x: 0, y: 0, rateX: 13, rateY: 7},
+            {type: 'empty', x: 0, y: 0, rateX: 13, rateY: 8},
+            {type: 'port', target: 3, x: 0, y: 0, rateX: 13, rateY: 9},
+            {type: 'toilet', target: 1, x: 0, y: 0, rateX: 13, rateY: 10},
+            {type: 'empty', x: 0, y: 0, rateX: 13, rateY: 11},
+            {type: 'exit', x: 0, y: 0, rateX: 13, rateY: 12},
             // bottom line
-            {type: 'corner', x: 0, y: 0, rateX: 12, rateY: 12},
-            {type: 'empty', x: 0, y: 0, rateX: 11, rateY: 12},
-            {type: 'empty', x: 0, y: 0, rateX: 10, rateY: 12},
-            {type: 'empty', x: 0, y: 0, rateX: 9, rateY: 12},
-            {type: 'port', target: 20, x: 0, y: 0, rateX: 8, rateY: 12},
-            {type: 'empty', x: 0, y: 0, rateX: 7, rateY: 12},
-            {type: 'home', target: 'HomeBottom', x: 0, y: 0, rateX: 6, rateY: 12},
-            {type: 'empty', x: 0, y: 0, rateX: 5, rateY: 12},
-            {type: 'port', target: 40, x: 0, y: 0, rateX: 4, rateY: 12},
-            {type: 'toilet', target: 'toiletBottom', x: 0, y: 0, rateX: 3, rateY: 12},
-            {type: 'empty', x: 0, y: 0, rateX: 2, rateY: 12},
-            {type: 'exit', target: 'toiletBottom', x: 0, y: 0, rateX: 1, rateY: 12},
+            {type: 'corner', x: 0, y: 0, rateX: 13, rateY: 13},
+            {type: 'empty', x: 0, y: 0, rateX: 12, rateY: 13},
+            {type: 'empty', x: 0, y: 0, rateX: 11, rateY: 13},
+            {type: 'empty', x: 0, y: 0, rateX: 10, rateY: 13},
+            {type: 'port', target: 4, x: 0, y: 0, rateX: 9, rateY: 13},
+            {type: 'empty', x: 0, y: 0, rateX: 8, rateY: 13},
+            {type: 'home', target: 2, x: 0, y: 0, rateX: 7, rateY: 13},
+            {type: 'empty', x: 0, y: 0, rateX: 6, rateY: 13},
+            {type: 'port', target: 5, x: 0, y: 0, rateX: 5, rateY: 13},
+            {type: 'toilet', target: 2, x: 0, y: 0, rateX: 4, rateY: 13},
+            {type: 'empty', x: 0, y: 0, rateX: 3, rateY: 13},
+            {type: 'exit', x: 0, y: 0, rateX: 2, rateY: 13},
             // left line
-            {type: 'corner', x: 0, y: 0, rateX: 0, rateY: 12},
-            {type: 'empty', x: 0, y: 0, rateX: 0, rateY: 11},
-            {type: 'empty', x: 0, y: 0, rateX: 0, rateY: 10},
-            {type: 'empty', x: 0, y: 0, rateX: 0, rateY: 9},
-            {type: 'port', target: 32, x: 0, y: 0, rateX: 0, rateY: 8},
-            {type: 'empty', x: 0, y: 0, rateX: 0, rateY: 7},
-            {type: 'home', target: 'HomeLeft', x: 0, y: 0, rateX: 0, rateY: 6},
-            {type: 'empty', x: 0, y: 0, rateX: 0, rateY: 5},
-            {type: 'port', target: 4, x: 0, y: 0, rateX: 0, rateY: 4},
-            {type: 'toilet', target: 'toiletLeft', x: 0, y: 0, rateX: 0, rateY: 3},
-            {type: 'empty', x: 0, y: 0, rateX: 0, rateY: 2},
-            {type: 'exit', target: 'toiletLeft', x: 0, y: 0, rateX: 0, rateY: 1},
+            {type: 'corner', x: 0, y: 0, rateX: 1, rateY: 13},
+            {type: 'empty', x: 0, y: 0, rateX: 1, rateY: 12},
+            {type: 'empty', x: 0, y: 0, rateX: 1, rateY: 11},
+            {type: 'empty', x: 0, y: 0, rateX: 1, rateY: 10},
+            {type: 'port', target: 6, x: 0, y: 0, rateX: 1, rateY: 9},
+            {type: 'empty', x: 0, y: 0, rateX: 1, rateY: 8},
+            {type: 'home', target: 3, x: 0, y: 0, rateX: 1, rateY: 7},
+            {type: 'empty', x: 0, y: 0, rateX: 1, rateY: 6},
+            {type: 'port', target: 7, x: 0, y: 0, rateX: 1, rateY: 5},
+            {type: 'toilet', target: 3, x: 0, y: 0, rateX: 1, rateY: 4},
+            {type: 'empty', x: 0, y: 0, rateX: 1, rateY: 3},
+            {type: 'exit', x: 0, y: 0, rateX: 1, rateY: 2},
         ];
 
-        this.resize();
-
-        VIEW.resizeDependenceArray.push(this);
+        this.init();
     }
 
-    getHalfCeilSize() {
-        if (VIEW.width > VIEW.height) return Math.floor(VIEW.height / rate);
-        return Math.floor(VIEW.width / rate);
-    }
-
-    resize() {
-        this.halfCeilSize = this.getHalfCeilSize();
-        this.ceilSize = (this.halfCeilSize > maxCeilSize / 2) ? maxCeilSize : this.halfCeilSize * 2;
-        this.size = this.ceilSize * ceils;
-        this.offsetX = Math.floor((VIEW.width - this.size) / 2);
-        this.offsetY = Math.floor((VIEW.height - this.size) / 2);
-
-        this.recalculateCeilsPositions([
-            this.toiletTop, this.toiletRight, this.toiletBottom, this.toiletLeft,
-            this.homeTop, this.toiletRight, this.toiletBottom, this.toiletLeft,
-            this.ceils
-        ]);
-    }
-
-    recalculateCeilsPositions( ceilsContainersArray ) {
-        const offsetX = this.offsetX + this.halfCeilSize;
-        const offsetY = this.offsetY + this.halfCeilSize;
-        ceilsContainersArray.forEach( container => {
+    init() {
+        const offset = this.ceilSize * 0.5 + constants.boardOffset;
+        [ ...this.reserves, ...this.toilets, ...this.homes, this.ports, this.ceils]
+        .forEach( container => {
             container.forEach(ceil => {
-                ceil.x = offsetX + this.ceilSize * ceil.rateX;
-                ceil.y = offsetY + this.ceilSize * ceil.rateY;
+                ceil.x = offset + this.ceilSize * ceil.rateX;
+                ceil.y = offset + this.ceilSize * ceil.rateY;
             });
         });
     }
 
+    addToReserve(startPoint) {
+        const reserve = this.reserves[startPoint];
+        for (let i = 0; i < 4; i++) {
+            if (reserve[i].isEmpty) {
+                reserve[i].isEmpty = false;
+                return i;
+            }
+        }
+    }
+
+    removeFromReserve(startPoint, index) {
+        const reserve = this.reserves[startPoint];
+        reserve[index].isEmpty = true;
+    }
+
     update() {
-        VIEW.context.drawImage(this.image, this.offsetX, this.offsetY, this.size, this.size);
+        VIEW.context.drawImage(this.image, this.imageOffset, this.imageOffset, this.imageSize, this.imageSize);
     }
 }
 

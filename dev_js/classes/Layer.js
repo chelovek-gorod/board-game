@@ -10,7 +10,7 @@ class Layer {
 
         if (zIndex === VIEW.layers.length) VIEW.layers.push(this);
         else {
-            array.splice(zIndex, 0, this);
+            VIEW.layers.splice(zIndex, 0, this);
             VIEW.layers.forEach( (layer, index) => layer.zIndex = index );
         }
     }
@@ -24,6 +24,11 @@ class Layer {
     }
 
     add(object) {
+        this.objects.push(object);
+    }
+
+    moveUp(object) {
+        this.objects = this.objects.filter(obj => obj !== object);
         this.objects.push(object);
     }
 

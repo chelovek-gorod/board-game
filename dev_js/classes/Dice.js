@@ -1,91 +1,105 @@
 import {SPRITES} from '../assets';
+import constants from '../constants';
 import VIEW from '../render';
+import DicePointer from './DicePointer';
 
 class Dice {
-    constructor(offsetViewX, offsetViewY) {
-        this.offsetViewX = offsetViewX;
-        this.offsetViewY = offsetViewY;
+    constructor(x, y) {
         this.img = SPRITES.dice;
-        this.resize();
-        this.frameSize = 42;
-        this.frameHalfSize = 21;
+        this.x = x - 42;
+        this.y = y - 42;
+        this.frameSize = 84;
+
+        this.throwDuration = constants.diceThrowDuration;
         this.fps = 30;
         this.frameDuration = Math.floor(1000 / this.fps);
         this.frameTimeout = this.frameDuration;
-        this.framePathSize = 30;
+        this.framePathSize = Math.floor(this.throwDuration / this.frameDuration);
         this.framePath = [];
+        this.framePoint = {x: 0, y: 0};
         this.value = this.getNewValue();
-        this.framePoint = this.getCoordinates();
-        this.framePoint.x *= this.frameSize;
-        this.framePoint.y *= this.frameSize;
 
-        VIEW.resizeDependenceArray.push(this);
-    }
-
-    resize() {
-        this.x = VIEW.x + this.offsetViewX;
-        this.y = VIEW.y + this.offsetViewY;
+        this.pointer = new DicePointer(this);
+        this.isActive = false;
     }
 
     getNewValue() {
-        return Math.ceil(Math.random() * 6);
-    }
-
-    getCoordinates() {
-        switch(this.value) {
-            case 1: return {x: 0, y: (Math.random() < 0.5) ? 4 : 12};
-            case 2: return {x: 4, y: (Math.random() < 0.5) ? 4 : 12};
-            case 5: return {x:12, y: (Math.random() < 0.5) ? 4 : 12};
-            case 6: return {x: 8, y: (Math.random() < 0.5) ? 4 : 12};
-            case 3: return {x: Math.floor(Math.random() * 4) * 4, y: 0};
-            case 4: return {x: Math.floor(Math.random() * 4) * 4, y: 8};
+        const value = Math.ceil(Math.random() * 6);
+        //const value = Math.random() < 0.5 ? 6 : 3;
+        switch(value) {
+            case 1: 
+                this.framePoint.x = 0;
+                this.framePoint.y = (Math.random() < 0.5) ? 4 * this.frameSize : 12 * this.frameSize;
+                break;
+            case 2:
+                this.framePoint.x = 4 * this.frameSize;
+                this.framePoint.y = (Math.random() < 0.5) ? 4 * this.frameSize : 12 * this.frameSize;
+                break;
+            case 5:
+                this.framePoint.x = 12 * this.frameSize;
+                this.framePoint.y = (Math.random() < 0.5) ? 4 * this.frameSize : 12 * this.frameSize;
+                break;
+            case 6:
+                this.framePoint.x = 8 * this.frameSize;
+                this.framePoint.y = (Math.random() < 0.5) ? 4 * this.frameSize : 12 * this.frameSize;
+                break;
+            case 3:
+                this.framePoint.x = Math.floor(Math.random() * 4) * 4 * this.frameSize;
+                this.framePoint.y = 0;
+                break;
+            case 4:
+                this.framePoint.x = Math.floor(Math.random() * 4) * 4 * this.frameSize;
+                this.framePoint.y = 8 * this.frameSize;
+                break;
+            default: console.warn('error in dice value');
         }
+        return value;
     }
 
     throw() {
+        // 
         if(this.framePath.length) return 0;
 
-        let path = ('' + Math.random()).slice(2);
-        while (path.length < this.framePathSize) path += ('' + Math.random()).slice(2);
+        let turnsOnPath = '';
+        while (turnsOnPath.length < this.framePathSize) {
+            turnsOnPath += ('' + Math.random()).slice(2);
+        }
 
         this.value = this.getNewValue();
-        let {x: xx, y: yy} = this.getCoordinates();
-        this.framePath.push({x: xx, y: yy});
+        this.framePath.push(this.framePoint);
 
         let direction = Math.floor(Math.random() * 8);
+        let {x, y} = this.framePoint;
+        const maxXY = 15 * this.frameSize;
 
-        for (let i = 1; i < path.length; i++) {
+        for (let i = 0; i < this.framePathSize; i++) {
             if (direction !== 0 && direction !== 4) {
-                xx += (direction < 4) ? 1 : -1;
-                if (xx < 0) xx = 15;
-                if (xx > 15) xx = 0;
+                x += (direction < 4) ? this.frameSize : -this.frameSize;
+                if (x < 0) x = maxXY;
+                if (x > maxXY) x = 0;
             }
             if (direction !== 2 && direction !== 6) {
-                yy += (direction > 2 && direction < 6) ? 1 : -1;
-                if (yy < 0) yy = 15;
-                if (yy > 15) yy = 0;
+                y += (direction > 2 && direction < 6) ? this.frameSize : -this.frameSize;
+                if (y < 0) y = maxXY;
+                if (y > maxXY) y = 0;
             }
 
-            this.framePath.push( {x: xx, y: yy} );
+            this.framePath.push( {x, y} );
 
-            if (+path[i] < 2) {
+            if (+turnsOnPath[i] < 2) {
                 direction--;
                 if (direction < 0) direction = 7;
             }
-            if (+path[i] > 7) {
+            if (+turnsOnPath[i] > 7) {
                 direction++;
                 if (direction > 7) direction = 0;
             }
         }
-        this.framePath.forEach( point => {
-            point.x *= this.frameSize;
-            point.y *= this.frameSize;
-        });
-
-        return this.value;
     }
 
     update(dt) {
+        if (this.isActive) this.pointer.update(dt);
+
         if (this.framePath.length) {
             this.frameTimeout -= dt;
             if (this.frameTimeout <= 0) {
@@ -93,8 +107,9 @@ class Dice {
                 this.framePoint = this.framePath.pop();
             }
         }
-        VIEW.context.drawImage(this.img, this.framePoint.x, this.framePoint.y, this.frameSize, this.frameSize,
-            this.x - this.frameHalfSize, this.y - this.frameHalfSize, this.frameSize, this.frameSize);
+        VIEW.context.drawImage(this.img,
+            this.framePoint.x, this.framePoint.y, this.frameSize, this.frameSize,
+            this.x, this.y, this.frameSize, this.frameSize);
     }
 }
 

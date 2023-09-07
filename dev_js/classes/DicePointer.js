@@ -1,49 +1,37 @@
 import { SPRITES } from "../assets";
+import constants from "../constants";
 import VIEW from "../render";
 
 class DicePointer {
     constructor(dice) {
         this.image = SPRITES.dicePointer;
-        this.size = 56;
+        this.x = dice.x + 41;
+        this.y = dice.y + 41;
+        this.scaleDuration = constants.diceActiveDuration / 2;
+        this.maxSize = 160;
+        this.minSize = 80;
+        this.scaleRate = (this.maxSize - this.minSize) / this.scaleDuration;
+        this.isScaleUp = true;
+        this.size = this.minSize;
         this.halfSize = this.size / 2;
-        this.dice = dice;
-        this.frame = 0;
-        this.fps = 30;
-        this.frameDuration = Math.floor(1000 / this.fps);
-        this.frameTimeout = this.frameDuration;
-        this.frames = this.getFrames();
-        this.resize();
-
-        VIEW.resizeDependenceArray.push(this);
     }
 
-    getFrames() {
-        const frames = [];
-        for(let y = 0; y < this.image.height; y += this.size) {
-            for(let x = 0; x < this.image.width; x += this.size) {
-                frames.push({x, y});
-            }
-        }
-        return frames;
-    }
-
-    resize() {
-        this.x = this.dice.x;
-        this.y = this.dice.y;
+    setMinSize() {
+        this.size = this.minSize;
+        this.halfSize = this.size / 2;
     }
 
     update(dt) {
-        this.frameTimeout -= dt;
-        if (this.frameTimeout <= 0) {
-            this.frameTimeout += this.frameDuration;
-            this.frame++;
-            if (this.frame === this.frames.length) this.frame = 0;
+        if (this.isScaleUp) {
+            this.size += this.scaleRate * dt;
+            if (this.size >= this.maxSize) this.isScaleUp = false;
+        } else  {
+            this.size -= this.scaleRate * dt;
+            if (this.size <= this.minSize) this.isScaleUp = true;
         }
-        VIEW.context.drawImage(
-            this.image,
-            this.frames[this.frame].x, this.frames[this.frame].y, this.size, this.size,
-            this.x - this.halfSize, this.y - this.halfSize, this.size, this.size
-        );
+        this.halfSize = this.size / 2;
+
+        VIEW.context.drawImage(this.image, this.x-this.halfSize, this.y-this.halfSize, this.size, this.size);
     }
 }
 

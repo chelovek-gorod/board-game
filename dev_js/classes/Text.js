@@ -1,4 +1,4 @@
-class TextSprite {
+class Text {
     constructor(text = '', x = 0, y = 0, options ) {
         this.x = x;
         this.y = y;

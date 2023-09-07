@@ -6,20 +6,22 @@ let previousTime = performance.now();
 
 let isOnFocus = true;
 
-window.onblur = stopRender;
-window.onfocus = startRender;
-window.onresize = VIEW.resize.bind(VIEW);
+addEventListener('blur', stopRender);
+addEventListener('focus', startRender);
+
+let renderId = requestAnimationFrame(render);
 
 function startRender() {
-    if (isOnFocus) return;
-
+    cancelAnimationFrame(renderId);
     isOnFocus = true;
     previousTime = performance.now();
-    requestAnimationFrame(render);
+    renderId = requestAnimationFrame(render);
+    console.log('start render');
 }
 
 function stopRender() {
     isOnFocus = false;
+    console.log('stop render');
 }
 
 function render(time) {
@@ -27,8 +29,7 @@ function render(time) {
     previousTime = time;
     VIEW.context.clearRect(0, 0, VIEW.width, VIEW.height);
     VIEW.layers.forEach( layer => layer.update(deltaTime) );
-    if (isOnFocus) requestAnimationFrame(render);
+    if (isOnFocus) renderId = requestAnimationFrame(render);
 }
-requestAnimationFrame(render);
 
 export default VIEW;

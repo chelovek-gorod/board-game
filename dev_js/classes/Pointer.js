@@ -1,39 +1,19 @@
-import { SPRITES } from "../assets";
 import VIEW from "../render";
 
-const scale = 123 / 120;
-const scaleDuration = 600;
-const rotationSpeed = 0.002;
-
 class Pointer {
-    constructor (target, board, isGreen = true) {
-        this.image = (isGreen) ? SPRITES.pointerGreen : SPRITES.pointerRed;
-        this.target = target;
-        this.board = board;
-        this.scaleDuration = scaleDuration;
-        this.rotationSpeed = rotationSpeed;
-        this.resize();
-        this.direction = 0;
-        this.isScaleUp = true;
-
-        VIEW.resizeDependenceArray.push(this);
-    }
-
-    resize() {
-        this.maxSize = this.board.ceilSize * scale;
-        this.minSize = this.maxSize * 0.9;
-        this.size = this.minSize;
+    constructor (index) {
+        this.scaleDuration = 900;
+        this.maxSize = 144; //132
+        this.minSize = 120; //102
+        this.size = this.minSize + ((this.maxSize - this.minSize) / 4) * index;
         this.halfSize = this.size / 2;
         
         this.scaleRate = (this.maxSize - this.minSize) / this.scaleDuration;
-
-        this.x = this.target.x;
-        this.y = this.target.y;
+        this.direction = 0;
+        this.isScaleUp = true;
     }
 
-    update(dt) {
-        this.direction += this.rotationSpeed * dt;
-
+    draw(sprite, point, dt) {
         if (this.isScaleUp) {
             this.size += this.scaleRate * dt;
             if (this.size >= this.maxSize) this.isScaleUp = false;
@@ -43,10 +23,7 @@ class Pointer {
         }
         this.halfSize = this.size / 2;
 
-        VIEW.context.setTransform(1, 0, 0, 1, this.x, this.y);
-        VIEW.context.rotate(this.direction);
-        VIEW.context.drawImage(this.image, -this.halfSize, -this.halfSize, this.size, this.size);
-        VIEW.context.setTransform(1, 0, 0, 1, 0, 0);
+        VIEW.context.drawImage(sprite, point.x-this.halfSize, point.y-this.halfSize, this.size, this.size);
     }
 }
 

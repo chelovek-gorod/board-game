@@ -2,84 +2,69 @@ import { loader } from './loader';
 import { SPRITES } from './assets';
 import Board from './classes/Board';
 import Dice from './classes/Dice';
-import Token from './classes/Token';
 import Layer from './classes/Layer';
-import Pointer from './classes/Pointer';
-import DicePointer from './classes/DicePointer';
+import Player from './classes/Player';
+import VIEW from './render';
+import constants from './constants';
+import Timer from './classes/Timer';
 
+loader(() => game.isLoaded = true);
 
-loader(loadingDone);
+export const game = {
+    isLoaded: false,
+    isStart: false,
+    players: [],
+    currentTurn: 0,
+    board: null,
+    dices: [],
 
-let isUserActionAwait = false;
-let currentTurn;
+    nextTurn() {
+        this.currentTurn++
+        if (this.currentTurn === this.players.length) this.currentTurn = 0;
 
-const players = [];
+        this.players[this.currentTurn].startTurn();
+    }
+};
 
-let dicesResult = [];
-let isDoubleDiceResult = false;
+function startGame() {
+    game.isStart = true;
+    VIEW.canvas.style.opacity = 1;
 
-let dicePointersLayer;
+    game.board = new Board();
+    new Layer('board', 0, [game.board]);
 
-function next() {
-    dicePointersLayer.clear();
-    if (dicesResult.length) {
-        const {pointer, steps} = dicesResult.shift();
-        dicePointersLayer.add(pointer);
-        players[currentTurn].move(steps);
-    } else {
-        if (!isDoubleDiceResult) {
-            currentTurn++;
-            if (currentTurn === players.length) currentTurn = 0;
-        }
-        isUserActionAwait = true;
+    game.dices.push( new Dice(VIEW.x - 63, VIEW.y - 63) );
+    game.dices.push( new Dice(VIEW.x + 63, VIEW.y + 63) );
+    new Layer('dices', 1, game.dices);
+
+    new Layer('players', 2, []);
+    new Layer('tokens', 3, []);
+
+    game.players.push( new Player(SPRITES.tokenColor, 0) );
+    game.players.push( new Player(SPRITES.tokenBlack, 1) );
+    game.players.push( new Player(SPRITES.tokenYellow, 2) );
+    game.players.push( new Player(SPRITES.tokenRed, 3) );
+
+    game.currentTurn = Math.floor(Math.random() * game.players.length);
+
+    new Timer(() => game.nextTurn(), constants.gameStartDuration);
+
+    VIEW.canvas.onclick = function(event) {
+        const cx = (event.clientX - VIEW.offsetX) * VIEW.sizeRate;
+        const cy = (event.clientY - VIEW.offsetY) * VIEW.sizeRate;
+        game.players[game.currentTurn].tokens.forEach( token => {
+            if (token.isAvailable) {
+                const dx = cx - token.x;
+                const dy = cy - token.y;
+                const distance = Math.sqrt(dx*dx + dy*dy);
+                if (distance < constants.ceilSize / 2) token.activation();
+            }
+        })
+
     }
 }
 
-function loadingDone() {
-    const board = new Board();
-
-    const dice1 = new Dice(-21, -21);
-    const dice2 = new Dice(21, 21);
-    const dicesLayer = new Layer('dices', 1, [dice1, dice2]);
-
-    const dicePointer1 = new DicePointer(dice1);
-    const dicePointer2 = new DicePointer(dice2);
-    dicePointersLayer = new Layer('dicePointers', 2);
-
-    players.push( new Token(SPRITES.tokenColor, 0, board, next) );
-    players.push( new Token(SPRITES.tokenBlack, 1, board, next) );
-    players.push( new Token(SPRITES.tokenYellow, 2, board, next) );
-    players.push( new Token(SPRITES.tokenRed, 3, board, next) );
-    const tokensLayer = new Layer('tokens', 3, players);
-
-    const stepDuration = players[0].stepDuration;
-
-    currentTurn =  Math.floor(Math.random() * players.length);
-    tokensLayer.remove( players[currentTurn] );
-    tokensLayer.add( players[currentTurn] );
-    isUserActionAwait = true;
-
-    const pointers = [
-        new Pointer(board.ceils[6], board, true),
-        new Pointer(board.ceils[18], board, false),
-    ];
-    const pointersLayer = new Layer('pointers', 4, pointers);
-    
-    document.body.onclick = function() {
-        if (!isUserActionAwait) return;
-
-        tokensLayer.remove( players[currentTurn] );
-        tokensLayer.add( players[currentTurn] );
-
-        isUserActionAwait = false;
-        let d1, d2;
-        d1 = dice1.throw();
-        d2 = dice2.throw();
-
-        if (d1 > d2) dicesResult = [{pointer: dicePointer1, steps: d1}, {pointer: dicePointer2, steps: d2}];
-        else dicesResult = [{pointer: dicePointer2, steps: d2}, {pointer: dicePointer1, steps: d1}];
-        isDoubleDiceResult = d1 === d2;
-        
-        setTimeout(next, 1500);
-    };
-}
+document.body.onclick = function(event) {
+    /*console.log('x:', event.clientX, ' y:', event.clientY);*/
+    if (!game.isStart && game.isLoaded) startGame();
+};

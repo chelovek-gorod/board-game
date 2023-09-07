@@ -39,6 +39,9 @@ body {
     align-items: center;
     
     background-color: #000000;
+    background-image: url(../src/images/wood.jpg);
+    background-position: center;
+    background-repeat: repeat;
     overflow: hidden;
 
     /**/
@@ -52,7 +55,7 @@ body {
 
 canvas {
     display: block;
-    background-image: url(../src/images/wood.jpg);
-    background-position: center;
-    background-repeat: repeat;
+    background-color: transparent;
+    opacity: 0;
+    transition: opacity 2s ease-in;
 }
