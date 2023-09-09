@@ -42,6 +42,9 @@ body {
     flex-wrap: wrap;
     justify-content: center;
     align-items: center;
+
+    font-family: MicraDi, Arial, Helvetica, sans-serif;
+    font-size: 12px;
     
     background-color: #000000;
     background-image: url(../src/images/wood.jpg);
@@ -65,11 +68,11 @@ body {
 }
 
 .second {
-    background-color: #0000ff80;
+    background-color: #0000ff40;
 }
 
 .first {
-    background-color: #00ff0080;
+    background-color: #00ff0040;
 }
 
 #canvas {
