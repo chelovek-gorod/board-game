@@ -61,6 +61,7 @@ body {
 .side-bar {
     height: 100vh;
     width: calc((100vw - 100vh) / 2);
+    text-shadow: #ffffff 3px 0 0;
 }
 
 .second {
