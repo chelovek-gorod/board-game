@@ -62,9 +62,11 @@ body {
 }
 
 .side-bar {
+    box-sizing: border-box;
+    padding: 10px;
     height: 100vh;
     width: calc((100vw - 100vh) / 2);
-    text-shadow: #ffffff 0 0 4px;
+    color: #ffffff;
 }
 
 .second {
