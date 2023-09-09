@@ -58,11 +58,48 @@ body {
     user-select: none;
 }
 
-canvas {
-    position: fixed;
-    left: 0;
-    top: 0;
+.side-bar {
+    height: 100vh;
+    width: calc((100vw - 100vh) / 2);
+}
+
+.second {
+    background-color: #0000ff80;
+}
+
+.first {
+    background-color: #00ff0080;
+}
+
+#canvas {
+    display: block;
+    height: 100vh;
+    width: 100vh;
     background-color: transparent;
     opacity: 0;
     transition: opacity 2s ease-in;
+}
+
+@media (orientation: landscape) {
+    .side-bar {
+        height: 100vh;
+        width: calc((100vw - 100vh) / 2);
+    }
+    
+    #canvas {
+        height: 100vh;
+        width: 100vh;
+    }
+}
+
+@media (orientation: portrait) {
+    .side-bar {
+        height: calc((100vh - 100vw) / 2);
+        width: 100vw;
+    }
+    
+    #canvas {
+        height: 100vw;
+        width: 100vw;
+    }
 }

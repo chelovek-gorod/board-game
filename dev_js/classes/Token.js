@@ -107,7 +107,7 @@ class Token {
             default :
                 // проверка пути по основному игровому полю
                 let index = this.index;
-                let isInHome = false;
+                let isInHome = index === this.reserve[0].target; // false;
                 for(let step = value; step > 0; step--) {
                     index = ++index % game.board.ceils.length;
 

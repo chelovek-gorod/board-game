@@ -27,6 +27,8 @@ export const game = {
 };
 
 function startGame() {
+    const div = document.querySelector('.first');
+
     game.isStart = true;
     VIEW.canvas.style.opacity = 1;
 
@@ -52,15 +54,28 @@ function startGame() {
     VIEW.canvas.onclick = function(event) {
         const cx = (event.clientX - VIEW.offsetX) * VIEW.sizeRate;
         const cy = (event.clientY - VIEW.offsetY) * VIEW.sizeRate;
+
+        let minSize = Infinity;
+
         game.players[game.currentTurn].tokens.forEach( token => {
             if (token.isAvailable) {
                 const dx = cx - token.x;
                 const dy = cy - token.y;
                 const distance = Math.sqrt(dx*dx + dy*dy);
                 if (distance < constants.ceilSize / 2) token.activation();
+
+                if (distance < minSize) minSize = distance;
             }
         })
 
+        console.log(event)
+
+        div.innerHTML = `
+            click<br>
+            x: ${cx.toFixed()}; y: ${cy.toFixed()}<br>
+            size: ${constants.ceilSize}; min dist: ${minSize.toFixed()}<br>
+            `;
+        new Timer(() => div.innerHTML = '', 1500);
     }
 }
 
