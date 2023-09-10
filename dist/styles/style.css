@@ -78,9 +78,7 @@ body {
     text-align: center;
     justify-content: center;
 
-    background-color: #00000080;
-    opacity: 1;
-    transition: opacity 1s ease-in-out;
+    background-color: #000000c0;
     align-items: center;
 }
 
